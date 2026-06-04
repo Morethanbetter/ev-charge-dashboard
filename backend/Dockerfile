@@ -1,28 +1,32 @@
-FROM python:3.11-slim
+# Stage 1: Build frontend
+FROM node:20-alpine AS frontend-build
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ .
+RUN npm run build
 
+# Stage 2: Backend + static serving
+FROM python:3.11-slim
 WORKDIR /app
 
-# Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc libpq-dev curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy backend requirements and install
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend application code
 COPY backend/ .
 
-# Create runtime directories
-RUN mkdir -p /app/uploads /app/dedup_data
+# Copy frontend build output into static/
+COPY --from=frontend-build /frontend/dist /app/static
 
-# Railway uses PORT env var; default to 8000 for local dev
+RUN mkdir -p /app/uploads /app/dedup_data /app/data
+
 ENV PORT=8000
-
 EXPOSE ${PORT}
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD curl -f http://localhost:${PORT}/api/v1/health || exit 1
 
