@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+venv/
+*.egg-info/
+*.egg
+
+# Database
+*.db
+*.sqlite3
+
+# Uploads and generated data
+backend/uploads/*
+backend/dedup_results/*
+!backend/uploads/.gitkeep
+!backend/dedup_results/.gitkeep
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.npm
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
