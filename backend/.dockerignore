@@ -1,0 +1,16 @@
+__pycache__
+*.pyc
+*.pyo
+.env
+.env.*
+uploads/*
+dedup_data/*
+.git
+.gitignore
+*.md
+deploy.sh
+railway.toml
+Procfile
+.dockerignore
+Dockerfile
+docker-compose.yml

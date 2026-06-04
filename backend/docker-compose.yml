@@ -1,0 +1,96 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dashboard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dashboard123}
+      POSTGRES_DB: dashboard_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dashboard -d dashboard_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dashboard:${POSTGRES_PASSWORD:-dashboard123}@db:5432/dashboard_db
+      SECRET_KEY: ${SECRET_KEY:-changeme-production-secret-key}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-120}
+      UPLOAD_DIR: /app/uploads
+      DEDUP_DIR: /app/dedup_data
+      MAX_FILE_SIZE: "52428800"
+      PORT: "8000"
+    volumes:
+      - upload_data:/app/uploads
+      - dedup_data:/app/dedup_data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  app2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dashboard:${POSTGRES_PASSWORD:-dashboard123}@db:5432/dashboard_db
+      SECRET_KEY: ${SECRET_KEY:-changeme-production-secret-key}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-120}
+      UPLOAD_DIR: /app/uploads
+      DEDUP_DIR: /app/dedup_data
+      MAX_FILE_SIZE: "52428800"
+      PORT: "8000"
+    volumes:
+      - upload_data:/app/uploads
+      - dedup_data:/app/dedup_data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  app3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dashboard:${POSTGRES_PASSWORD:-dashboard123}@db:5432/dashboard_db
+      SECRET_KEY: ${SECRET_KEY:-changeme-production-secret-key}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-120}
+      UPLOAD_DIR: /app/uploads
+      DEDUP_DIR: /app/dedup_data
+      MAX_FILE_SIZE: "52428800"
+      PORT: "8000"
+    volumes:
+      - upload_data:/app/uploads
+      - dedup_data:/app/dedup_data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ../frontend:/usr/share/nginx/html
+    depends_on:
+      - app1
+      - app2
+      - app3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  upload_data:
+  dedup_data:
