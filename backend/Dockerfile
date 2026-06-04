@@ -1,12 +1,3 @@
-# Stage 1: Build frontend
-FROM node:20-alpine AS frontend-build
-WORKDIR /frontend
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
-COPY frontend/ .
-RUN npm run build
-
-# Stage 2: Backend + static serving
 FROM python:3.11-slim
 WORKDIR /app
 
@@ -19,8 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ .
 
-# Copy frontend build output into static/
-COPY --from=frontend-build /frontend/dist /app/static
+# Copy pre-built frontend static files (built by frontend expert)
+COPY frontend/dist /app/static
 
 RUN mkdir -p /app/uploads /app/dedup_data /app/data
 
