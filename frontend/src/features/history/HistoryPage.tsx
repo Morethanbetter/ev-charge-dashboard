@@ -25,7 +25,7 @@ export default function HistoryPage() {
     } catch {
       // fallback mock for dev
       const mock: UploadFile[] = Array.from({ length: 5 }, (_, i) => ({
-        id: i + 1,
+        id: String(i + 1),
         filename: `sample_data_${i + 1}.csv`,
         file_size: Math.floor(Math.random() * 10000000),
         file_type: 'csv',
