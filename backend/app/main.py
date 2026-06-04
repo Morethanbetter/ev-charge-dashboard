@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -7,21 +8,32 @@ from app.models.user import User
 from app.core.security import get_password_hash
 from sqlalchemy import select
 
+logger = logging.getLogger(__name__)
+
 
 async def init_admin_user():
-    async with async_session() as db:
-        result = await db.execute(select(User).where(User.username == "admin"))
-        if result.scalar_one_or_none() is None:
-            admin = User(username="admin", password=get_password_hash("admin123"))
-            db.add(admin)
-            await db.commit()
+    try:
+        async with async_session() as db:
+            result = await db.execute(select(User).where(User.username == "admin"))
+            if result.scalar_one_or_none() is None:
+                admin = User(username="admin", password=get_password_hash("admin123"))
+                db.add(admin)
+                await db.commit()
+                logger.info("Default admin user created")
+    except Exception as e:
+        logger.warning(f"Could not init admin user: {e}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    await init_admin_user()
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        await init_admin_user()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        logger.warning("App starting without database - some features will be unavailable")
     yield
 
 

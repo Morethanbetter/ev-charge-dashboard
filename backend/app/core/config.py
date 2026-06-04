@@ -3,7 +3,7 @@ from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql+asyncpg://dashboard:dashboard123@db:5432/dashboard_db"
+    database_url: str = "sqlite+aiosqlite:///./data/dashboard.db"
     secret_key: str = "your-secret-key-change-in-production-abc123xyz"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 120

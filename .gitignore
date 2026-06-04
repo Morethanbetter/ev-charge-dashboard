@@ -45,3 +45,7 @@ docker-compose.override.yml
 # Logs
 *.log
 logs/
+data/
+*.pyc
+uploads/
+dedup_data/
