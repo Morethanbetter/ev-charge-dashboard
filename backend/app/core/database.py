@@ -5,16 +5,21 @@ import os
 
 settings = get_settings()
 
+# Auto-convert postgresql:// to postgresql+asyncpg:// for async driver
+db_url = settings.database_url
+if db_url.startswith("postgresql://") and "+" not in db_url.split("://")[0]:
+    db_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
 # SQLite needs different connect_args; also ensure data dir exists
-if settings.database_url.startswith("sqlite"):
+if db_url.startswith("sqlite"):
     os.makedirs("data", exist_ok=True)
     engine = create_async_engine(
-        settings.database_url,
+        db_url,
         echo=False,
         connect_args={"check_same_thread": False},
     )
 else:
-    engine = create_async_engine(settings.database_url, echo=False, pool_pre_ping=True)
+    engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
 
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
