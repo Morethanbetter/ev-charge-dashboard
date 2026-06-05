@@ -15,8 +15,13 @@ settings = get_settings()
 
 @router.post("/login")
 async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.username == req.username))
-    user = result.scalar_one_or_none()
+    try:
+        result = await db.execute(select(User).where(User.username == req.username))
+        user = result.scalar_one_or_none()
+    except Exception as e:
+        import logging
+        logging.error(f"Database error during login: {e}")
+        raise HTTPException(status_code=500, detail={"code": 2001, "message": "数据库连接失败，请检查 DATABASE_URL 配置", "data": None})
     if not user or not verify_password(req.password, user.password):
         raise HTTPException(status_code=401, detail={"code": 1001, "message": "用户名或密码错误", "data": None})
     token = create_access_token(data={"sub": str(user.id), "username": user.username})

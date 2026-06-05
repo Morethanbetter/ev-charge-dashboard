@@ -50,7 +50,14 @@ app.include_router(files.router, prefix="/api/v1/files", tags=["\u6587\u4ef6"])
 
 @app.get("/api/v1/health")
 async def health_check():
-    return {"code": 0, "message": "ok", "data": {"status": "healthy"}}
+    db_status = "unknown"
+    try:
+        async with async_session() as db:
+            await db.execute(select(User).limit(1))
+            db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)[:100]}"
+    return {"code": 0, "message": "ok", "data": {"status": "healthy", "database": db_status}}
 
 
 # Serve frontend static files (must be AFTER API routes)
