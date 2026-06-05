@@ -48,6 +48,36 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["\u8ba4\u8bc1"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["\u6587\u4ef6"])
 
 
+
+
+@app.post("/api/v1/debug/init-admin")
+async def force_init_admin():
+    try:
+        async with async_session() as db:
+            result = await db.execute(select(User).where(User.username == "admin"))
+            if result.scalar_one_or_none() is None:
+                admin = User(username="admin", password=get_password_hash("admin123"))
+                db.add(admin)
+                await db.commit()
+                return {"code": 0, "message": "Admin user created", "data": {"username": "admin", "password": "admin123"}}
+            else:
+                return {"code": 0, "message": "Admin user already exists", "data": None}
+    except Exception as e:
+        return {"code": 1, "message": str(e), "data": None}
+
+@app.get("/api/v1/debug/admin")
+async def debug_admin():
+    try:
+        async with async_session() as db:
+            result = await db.execute(select(User).where(User.username == "admin"))
+            user = result.scalar_one_or_none()
+            if user:
+                return {"code": 0, "message": "ok", "data": {"exists": True, "id": user.id, "username": user.username}}
+            else:
+                return {"code": 0, "message": "ok", "data": {"exists": False, "hint": "Admin user not found. Try restarting the app to trigger initialization."}}
+    except Exception as e:
+        return {"code": 1, "message": str(e), "data": None}
+
 @app.get("/api/v1/health")
 async def health_check():
     db_status = "unknown"
